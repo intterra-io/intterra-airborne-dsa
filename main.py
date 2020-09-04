@@ -5,20 +5,36 @@
 # aws configure
 
 import boto3
+from botocore.config import Config
 from datetime import datetime
 import sys
 import glob
 import os
 import time
+import json  
 import re
-import settings
 from signal import signal, SIGINT
-s3 = boto3.client('s3')  # TODO: pass keys from json config (optionally)
+f = open('config.json')
+config = json.load(f)
+aws_config = Config(
+    region_name = 'us-west-1'
+)
+s3_with_creds = boto3.client(
+    's3', 
+    config=aws_config, 
+    aws_secret_access_key=config['aws_secret_access_key'], 
+    aws_access_key_id=config['aws_access_key_id']
+) 
+s3_without_creds = boto3.client(
+    's3', 
+    config=aws_config
+)
+s3 = s3_with_creds if config['aws_secret_access_key'] and config['aws_access_key_id'] else s3_without_creds
 
 
 def run():
     # init
-    bucket = settings.BUCKET  # TODO: Convert to persistant .json config
+    bucket = config['bucket']  # TODO: Convert to persistant .json config
     now = datetime.utcnow()
     dir_path = os.path.dirname(os.path.realpath(__file__))
     welcome()
@@ -67,7 +83,6 @@ def create_mission(mission_name, bucket):
         f.write('')
     s3.upload_file(mission_path, bucket, f'MISSION/{mission_file_name}')
     time.sleep(1)
-
 
 def find_mission():
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -133,6 +148,8 @@ def welcome():
     print("\\____|__  /__||__|  |___  /\\____/|__|  |___|  /\\___  > /_______  /_______  /\\____|__  /")
     print("        \\/              \\/                  \\/     \\/          \\/        \\/         \\/ ")
     print("Airborne API Data Shipping App powered by Intterra")
+    print('\n')
+    print("Follow the prompts to create a mission file name or select an existing mission. After selecting a mission, move the files you would like to upload into this folder. For images, upload a .tif or .tiff file. For map features, upload a .kml file.")
     print('\n')
 
 
