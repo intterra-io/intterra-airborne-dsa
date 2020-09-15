@@ -20,7 +20,7 @@ aws_config = Config(
     region_name='us-west-1'
 )
 s3 = None
-if 'awsSecretAccessKey' in config and 'awsAccessKeyId' in config:
+if 'awsSecretAccessKey' in config and config['awsSecretAccessKey'] != "" and 'awsAccessKeyId' in config and config['awsAccessKeyId'] != "":
     boto3.client(
         's3',
         config=aws_config,
