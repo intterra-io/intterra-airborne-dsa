@@ -34,7 +34,7 @@ s3 = s3_with_creds if config['aws_secret_access_key'] and config['aws_access_key
 
 def run():
     # init
-    bucket = config['bucket']  # TODO: Convert to persistant .json config
+    bucket = config['bucket']
     now = datetime.utcnow()
     dir_path = os.path.dirname(os.path.realpath(__file__))
     welcome()
@@ -79,10 +79,15 @@ def create_mission(mission_name, bucket):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     mission_file_name = f'{mission_name}_{now.strftime("%Y%m%d")}_{now.strftime("%H%M")}Z.txt'
     mission_path = f'{dir_path}/{mission_file_name}'
-    with open(mission_path, 'w+') as f:
-        f.write('')
-    s3.upload_file(mission_path, bucket, f'MISSION/{mission_file_name}')
-    time.sleep(1)
+    try:
+        with open(mission_path, 'w+') as f:
+            f.write('')
+        s3.upload_file(mission_path, bucket, f'MISSION/{mission_file_name}')
+        time.sleep(1)
+    except Exception as e:
+        os.remove(mission_path)
+        raise e
+
 
 def find_mission():
     dir_path = os.path.dirname(os.path.realpath(__file__))
