@@ -11,28 +11,34 @@ import sys
 import glob
 import os
 import time
-import json  
+import json
 import re
 from signal import signal, SIGINT
 f = open('config.json')
 config = json.load(f)
 aws_config = Config(
-    region_name = 'us-west-1'
+    region_name='us-west-1'
 )
-s3_with_creds = boto3.client(
-    's3', 
-    config=aws_config, 
-    aws_secret_access_key=config['aws_secret_access_key'], 
-    aws_access_key_id=config['aws_access_key_id']
-) 
-s3_without_creds = boto3.client(
-    's3', 
-    config=aws_config
-)
-s3 = s3_with_creds if config['aws_secret_access_key'] and config['aws_access_key_id'] else s3_without_creds
+s3 = None
+if 'awsSecretAccessKey' in config and 'awsAccessKeyId' in config:
+    boto3.client(
+        's3',
+        config=aws_config,
+        aws_secret_access_key=config['awsSecretAccessKey'],
+        aws_access_key_id=config['awsAccessKeyId']
+    )
+else:
+    s3 = boto3.client(
+        's3',
+        config=aws_config
+    )
 
 
 def run():
+
+    # get config info
+    # TODO: Propt user for config info (bucket, key, secret, options)
+
     # init
     bucket = config['bucket']
     now = datetime.utcnow()
